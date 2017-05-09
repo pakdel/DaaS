@@ -1,0 +1,87 @@
+#ifndef DAAS_CONFIG_H
+#define DAAS_CONFIG_H
+
+#define EXIT_BAD_INVOKATION 2
+#define EXIT_EVENTFD_FAILED 3
+#define EXIT_INOTIFY_FAILED 4
+#define EXIT_RLIMIT_FAILED 5
+#define EXIT_DAEMONIZE_FAILED 6
+#define EXIT_RESTART_FORK_FAILED 7
+#define EXIT_RESTART_EXEC_FAILED 8
+#define EXIT_EXCEPTION 20
+#define LOGENTRIES_TOKEN_ENV_VAR "LOGENTRIES_TOKEN"
+#define DATADOG_API_KEY_ENV_VAR "DATADOG_API_KEY"
+
+// DEBUG levels
+// 0  Minimal, but still has LOG (and ERROR)
+// 1  Real debug, enable DEBUG
+// 2  Trace, enable TRACE
+// 3  Chatty and calc_load, enable VERBOSE
+// #define DEBUG_LEVEL 2
+
+#ifndef DNDEBUG
+#define MARK_HERE                                                              \
+  std::cerr << setw(5) << std::right << __LINE__ << " of " << __FILE__         \
+            << std::endl;
+#endif
+
+#include <boost/asio.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl.hpp>
+#include <chrono>
+
+// using high_resolution_clock = system_clock;
+#define NOW() std::chrono::high_resolution_clock::now()
+#define EPOCH()                                                                \
+  std::chrono::duration_cast<std::chrono::seconds>(                            \
+      std::chrono::system_clock::now().time_since_epoch())                     \
+      .count()
+typedef std::chrono::time_point<std::chrono::high_resolution_clock> perf_timer;
+constexpr inline auto time_diff(perf_timer start, perf_timer end) {
+  return std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+      .count();
+}
+
+#include <nghttp2/asio_http2_server.h>
+namespace DaaS {
+typedef nghttp2::asio_http2::server::request http_request;
+typedef nghttp2::asio_http2::server::response http_response;
+typedef nghttp2::asio_http2::server::http2 nghttp2_server;
+}
+
+// define version
+// #define DaaS_VERSION_MAJOR @DaaS_VERSION_MAJOR@
+// #define DaaS_VERSION_MINOR @DaaS_VERSION_MINOR@
+#define PROJECT_VERSION "@PROJECT_VERSION@"
+#define PRIVATE_KEY_FILE "@PRIVATE_KEY_FILE@"
+#define CERTIFICATE_CHAIN_FILE "@CERTIFICATE_CHAIN_FILE@"
+
+#ifndef THREAD_COUNT
+#define THREAD_COUNT 2
+#endif
+
+#ifndef PORT
+#define PORT "8080"
+#endif
+
+#define OPEN_FILE_MARGIN 64
+#define MAX_FILEPATH_SIZE 1024
+
+#define DB_CONNECTION_RETRY_SLEEP 3s
+
+#define NET_API_TIMEOUT 1s
+
+#define METRIC_SOURCE_HOST "home"
+#define METRIC_TAGS "\"environment:test\",\"version:@PROJECT_VERSION@\""
+// Rate limit: duration of sleep between sending metrics
+using namespace std::chrono_literals;
+#define METRIC_SLEEP 3000ms
+// Max queue size: send metrics, even if did not get enough sleep
+#define METRIC_MAX_QUEUE_ZISE 500
+
+#define LOGENTRIES_HOST "data.logentries.com"
+#define LOGENTRIES_PORT "https"
+#define DATADOG_HOST "app.datadoghq.com"
+#define DATADOG_PORT "https"
+
+#endif // DAAS_CONFIG_H
